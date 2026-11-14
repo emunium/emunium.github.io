@@ -1,0 +1,152 @@
+[
+  {
+    "title": "Installation",
+    "slug": "installation",
+    "group": "Get started",
+    "description": "Install Emunium, platform requirements, and optional extras."
+  },
+  {
+    "title": "Quick start",
+    "slug": "quick-start",
+    "group": "Get started",
+    "description": "Open a browser, find elements, and make a verified click."
+  },
+  {
+    "title": "Browser mode",
+    "slug": "browser-mode",
+    "group": "Get started",
+    "description": "Browser lifecycle, constructor options, and persistent profiles."
+  },
+  {
+    "title": "Browsers",
+    "slug": "browsers",
+    "group": "Browsers",
+    "description": "Chrome, Edge, Brave, Chromium, Firefox, and Camoufox setup."
+  },
+  {
+    "title": "Connect to your own browser",
+    "slug": "connect",
+    "group": "Browsers",
+    "description": "Keep your browser profile and connect through a persistent extension."
+  },
+  {
+    "title": "Navigation",
+    "slug": "navigation",
+    "group": "Automation",
+    "description": "Navigate pages and choose the load state to wait for."
+  },
+  {
+    "title": "Waiting",
+    "slug": "waiting",
+    "group": "Automation",
+    "description": "Element conditions, URL waits, navigation, and timeout behavior."
+  },
+  {
+    "title": "Element API",
+    "slug": "elements",
+    "group": "Automation",
+    "description": "Element handles, properties, actions, focus, and stale elements."
+  },
+  {
+    "title": "Locators",
+    "slug": "locators",
+    "group": "Automation",
+    "description": "Find elements by role, label, text, or test ID and assert their state."
+  },
+  {
+    "title": "Mouse and keyboard",
+    "slug": "mouse-and-keyboard",
+    "group": "Automation",
+    "description": "Verified clicks, dragging, keyboard input, and the fail-safe."
+  },
+  {
+    "title": "Human-like input",
+    "slug": "human-like-input",
+    "group": "Automation",
+    "description": "Motion and typing presets, planners, and parameter reference."
+  },
+  {
+    "title": "Tabs",
+    "slug": "tabs",
+    "group": "Automation",
+    "description": "Open, switch, pin, and close browser tabs."
+  },
+  {
+    "title": "Network waits",
+    "slug": "network-waits",
+    "group": "Automation",
+    "description": "Wait for responses from the pinned tab or a specific action."
+  },
+  {
+    "title": "JavaScript execution",
+    "slug": "javascript",
+    "group": "Automation",
+    "description": "Run JavaScript, await promises, and return JSON values."
+  },
+  {
+    "title": "Errors",
+    "slug": "errors",
+    "group": "Reference",
+    "description": "Typed exceptions, timeout messages, and recovery hints."
+  },
+  {
+    "title": "Screen coordinates, DPI and zoom",
+    "slug": "coordinates",
+    "group": "Reference",
+    "description": "Screen mapping, multi-monitor support, and click verification."
+  },
+  {
+    "title": "Headless mode",
+    "slug": "headless",
+    "group": "Reference",
+    "description": "DOM-only automation without a visible browser window."
+  },
+  {
+    "title": "Session isolation",
+    "slug": "sessions",
+    "group": "Reference",
+    "description": "Per-browser state, authenticated bridges, and cleanup."
+  },
+  {
+    "title": "Standalone mode",
+    "slug": "standalone",
+    "group": "Beyond the browser",
+    "description": "Desktop automation with image matching and OCR."
+  },
+  {
+    "title": "PageParser and Locator",
+    "slug": "parsing",
+    "group": "Beyond the browser",
+    "description": "Parse HTML and use locators without a live browser."
+  },
+  {
+    "title": "Advanced utilities",
+    "slug": "utilities",
+    "group": "Reference",
+    "description": "Low-level bridge, coordinate storage, and browser downloads."
+  },
+  {
+    "title": "Limitations",
+    "slug": "limitations",
+    "group": "Reference",
+    "description": "Platform constraints, focus requirements, and iframe support."
+  },
+  {
+    "title": "Running in parallel",
+    "slug": "parallel",
+    "group": "Operations",
+    "description": "Separate displays, container workers, and headless pools."
+  },
+  {
+    "title": "Running the Linux suite",
+    "slug": "linux-tests",
+    "group": "Operations",
+    "description": "Run the unit and end-to-end suites inside Docker."
+  },
+  {
+    "title": "License",
+    "slug": "license",
+    "group": "Project",
+    "description": "Emunium is licensed under MIT."
+  }
+]
