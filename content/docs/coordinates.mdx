@@ -1,0 +1,29 @@
+---
+title: "Screen coordinates, DPI and zoom"
+description: "Screen mapping, multi-monitor support, and click verification."
+---
+
+# Screen coordinates, DPI and zoom
+
+- On Windows, `import emunium` makes the process per-monitor DPI aware
+  (`PER_MONITOR_AWARE_V2`, with older fallbacks). Screen coordinates are then
+  physical pixels on every monitor. Import emunium **before** pyautogui or any
+  GUI toolkit: whichever library sets DPI awareness first wins, and emunium
+  does not fail if it was set already.
+- Element positions are converted from CSS pixels to screen input coordinates
+  using the window position and size, the page zoom and `devicePixelRatio`. On
+  macOS the unit is points; on Windows and Linux it is physical pixels.
+  Multi-monitor desktops, including monitors at negative coordinates, are
+  supported.
+- The estimate is calibrated from real pointer events: after the first move,
+  the position the page reports for the cursor is used to correct the mapping
+  for that browser. Moving or resizing the window, or changing the zoom, discards
+  the calibration.
+- With `verify_input=True` (default) every click is preceded by a check that the
+  page saw the pointer over the target element (or one of its descendants). A
+  miss is corrected up to two times; then `ClickVerificationError` is raised and
+  no button is pressed. If the page receives no pointer event at all (window
+  minimized, covered by another window, or off-screen), `NativeInputError` is
+  raised.
+- `Element.screen_x` / `screen_y` give the element center in screen input
+  coordinates, calibrated when a calibration exists.

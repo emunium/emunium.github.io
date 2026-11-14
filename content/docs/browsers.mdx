@@ -1,0 +1,99 @@
+---
+title: "Browsers"
+description: "Chrome, Edge, Brave, Chromium, Firefox, and Camoufox setup."
+---
+
+# Browsers
+
+```python
+from emunium import Browser
+
+with Browser(browser="edge", headless=True) as browser:
+    browser.goto("https://example.com/")
+    print(browser.browser_name)  # "edge"
+```
+
+`browser=` chooses what `launch()` starts:
+
+| Value | Starts |
+|---|---|
+| `"chrome"`, `"edge"`, `"brave"`, `"chromium"` | that installed browser; `LaunchError` listing the searched locations when it is not installed |
+| `"cft"` | Chrome for Testing, downloaded on first use (see [ensure_chrome](/docs/utilities/#ensure_chrome)) |
+| `"auto"` | the first installed of Chrome, Edge, Brave and Chromium, in that order; Chrome for Testing when none is installed |
+| a path | that Chromium executable; Firefox, Camoufox, Waterfox, LibreWolf, Floorp and Zen paths are recognized as Firefox and require `Browser.connect` |
+
+Without `browser`, emunium uses `chrome_path`, then the `EMUNIUM_CHROME_PATH`
+environment variable, then `"auto"`. Firefox is never picked automatically;
+use `Browser.connect` with its name or path. Installed browsers are looked up in
+Program Files, Program Files (x86), LocalAppData and the App Paths registry key on Windows, in
+`/Applications` and `~/Applications` on macOS, and on `PATH` on Linux.
+
+Extension installation depends on the browser and mode:
+
+| Browser | How the extension is installed |
+|---|---|
+| Edge, Brave, Chromium, Chrome for Testing | `--load-extension` |
+| Google Chrome | Chrome ignores `--load-extension` since version 137, so emunium starts it with `--remote-debugging-pipe --enable-unsafe-extension-debugging` and installs the extension over that private pipe (`Extensions.loadUnpacked`). The pipe stays open for the session; closing it ends Chrome. |
+| Firefox and recognized Gecko forks | use `Browser.connect` with a signed XPI registered through Enterprise Policies; `Browser.launch()` raises `LaunchError` |
+
+Chromium launches include these startup defaults:
+
+```text
+--no-first-run
+--no-default-browser-check
+--disable-default-apps
+--disable-popup-blocking
+--disable-notifications
+--disable-features=ChromeWhatsNewUI,AutofillServerCommunication,TranslateUI,OptimizationHints
+--disable-background-timer-throttling
+--disable-backgrounding-occluded-windows
+--disable-renderer-backgrounding
+--hide-crash-restore-bubble
+--disable-blink-features=AutomationControlled
+```
+
+`--disable-popup-blocking` disables the popup blocker. `headless=True` also adds
+`--headless=new`; `extra_args` are appended after the defaults.
+
+Firefox notes:
+
+- Firefox 128 or newer. Firefox gets its own build of the extension
+  (`background.scripts`, an explicit extension-page CSP, the gecko id
+  `bridge@emunium.dev`).
+- `userScripts` is an optional permission in Firefox, so the CSP-bypass retry
+  of `execute_script` (see [JavaScript execution](/docs/javascript/)) is
+  unavailable there unless that permission is granted.
+- For headless Firefox, pass `extra_args=["-headless"]` to `Browser.connect`
+  and use DOM operations only (see [Headless mode](/docs/headless/)).
+
+Recognized Gecko forks use the same Enterprise Policies workflow described in
+[Connect to your own browser](/docs/connect/). The fork must accept
+the signed extension and these policies. Pass a prepared Camoufox profile with
+`user_data_dir`:
+
+```python
+from time import sleep
+
+from emunium import Browser
+
+camoufox_path = r"C:\Browsers\Camoufox\camoufox.exe"
+camoufox_profile = r"C:\Browsers\Camoufox\profiles\automation"
+
+with Browser.connect(
+    browser=camoufox_path,
+    user_data_dir=camoufox_profile,
+    timeout=120.0,
+) as browser:
+    print(f"Browser: {browser.browser_name}")  # "firefox"
+    browser.goto("https://bot.sannysoft.com/", timeout=60.0)
+    browser.scroll_to(0, 500)
+    browser.click("table", human=True, timeout=60.0)
+    sleep(10)  # Keep the headed window open for inspection.
+```
+
+Use `browser=` with `Browser.connect` for a Firefox-family binary. A recognized
+Gecko path reports `browser.browser_name == "firefox"`.
+
+`browser.browser_name` reports the resolved browser: one of the names above,
+`"cft"`, or `"custom"` for an unrecognised path. With `connect`, an already-
+running browser can instead be named from its user agent (see below).

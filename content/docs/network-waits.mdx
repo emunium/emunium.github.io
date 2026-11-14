@@ -1,0 +1,50 @@
+---
+title: "Network waits"
+description: "Wait for responses from the pinned tab or a specific action."
+---
+
+# Network waits
+
+```python
+browser.click("#fetch-data")
+response = browser.wait_for_response("*/api/v1/users*", timeout=10.0)
+if response:
+    print(response["statusCode"], response["url"])
+    print(response.status, response.url, response.ok)  # NetworkResponse attributes
+```
+
+`wait_for_response(url_pattern, timeout=10.0, *, since=None, any_tab=False)`
+returns the first matching response, or `None` on timeout.
+
+- `url_pattern` is matched against the whole URL. `*` matches any run of
+  characters; every other character, including `?`, `.` and `[`, is literal.
+- Only responses of the pinned tab are considered unless `any_tab=True`.
+- `since` is an epoch timestamp in milliseconds. Responses that finished before
+  it are ignored. By default it is the start of the last action emunium
+  recorded for this browser: the `Browser` methods `goto`, `click`, `type`,
+  `execute_script`, `new_tab`, `scroll_to` and the other input methods, plus
+  the pointer check of a verified click. Element-level actions (`element.click()`,
+  `element.type()`, ...) with `verify_input=False` do not advance it, so after
+  those pass `since=` yourself if an earlier response could match.
+
+Entries look like
+`{"url", "statusCode", "method", "type", "timeStamp", "tabId", "requestId"}`, plus
+`"error"` for requests that failed at the network level. They are returned as
+`NetworkResponse` records: `.url`, `.status` (`statusCode`), `.method`, `.type`,
+`.tab_id`, `.request_id`, `.timestamp` (`timeStamp`, epoch ms), `.error` (`None`
+unless the request failed) and `.ok` (status 200-399 and no error). The
+extension keeps the last 500 responses from the last two minutes.
+
+To wait for a response caused by a specific block of code, use
+`expect_response`:
+
+```python
+with browser.expect_response("*/api/search*", timeout=10.0) as resp:
+    browser.click("#search")
+print(resp.value["statusCode"], resp.value.status)
+```
+
+The time window starts when the block is entered and the timeout runs from
+when it exits. The tab is the pinned tab at entry (`any_tab=True` widens it). If
+no response matches, `WaitTimeoutError` (a `TimeoutError`) is raised on exit. If the block itself
+raises, nothing is awaited and the exception propagates.

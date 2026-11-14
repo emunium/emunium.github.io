@@ -1,0 +1,26 @@
+---
+title: "Advanced utilities"
+description: "Low-level bridge, coordinate storage, and browser downloads."
+---
+
+# Advanced utilities
+
+- `Bridge` - the WebSocket transport to the extension, for custom commands
+  outside the `Browser` facade. Its methods return plain data and raise the
+  exceptions in [Errors](/docs/errors/).
+- `CoordsStore` / `ElementRecord` - a thread-safe cache of element rects.
+
+## ensure_chrome
+
+```python
+from emunium import ensure_chrome
+
+path = ensure_chrome()
+```
+
+Returns `EMUNIUM_CHROME_PATH` when set (raising `LaunchError` if it points to a
+missing file); otherwise downloads the current stable Chrome for Testing build
+for the platform if it is not installed yet, and returns its path. Installation
+is atomic and safe against concurrent installers. `Browser.launch()` calls it
+for `browser="cft"`, and for the automatic choice when no supported browser is
+installed (see [Browsers](/docs/browsers/)).

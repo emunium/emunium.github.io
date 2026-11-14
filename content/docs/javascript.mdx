@@ -1,0 +1,25 @@
+---
+title: "JavaScript execution"
+description: "Run JavaScript, await promises, and return JSON values."
+---
+
+# JavaScript execution
+
+```python
+title = browser.execute_script("return document.title")
+data = browser.execute_script("const r = await fetch('/api/me'); return r.json();")
+```
+
+The code is the body of a function run in the page: use `return` to produce a
+value; a returned promise is awaited. The result is converted to a JSON value:
+
+- `undefined` becomes `None`; `NaN` and infinities become `None`.
+- Circular references become `"[Circular]"`, `window` becomes `"[Window]"`.
+- DOM nodes become `{"nodeType", "nodeName", "id", "className"}`.
+- Errors become `{"name", "message"}`; values that cannot be read become
+  `"[Unserializable]"`.
+
+A script that throws raises `ScriptError`. A page whose Content Security Policy
+forbids evaluation raises `CSPBlockedError` (emunium first retries through the
+`userScripts` API, which pages cannot block). A result larger than about 32 MiB
+raises `ScriptError`.

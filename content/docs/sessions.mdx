@@ -1,0 +1,25 @@
+---
+title: "Session isolation"
+description: "Per-browser state, authenticated bridges, and cleanup."
+---
+
+# Session isolation
+
+Every `Browser` gets its own session:
+
+- a temporary session directory with a private copy of the extension and a
+  session file holding the bridge port and a random token;
+- a WebSocket bridge on `127.0.0.1` (OS-assigned port by default). Every
+  connection must present that token. Connections whose `Origin` header is not
+  `chrome-extension://...` or `moz-extension://...` (that is, web pages) are
+  rejected; a connection
+  without an `Origin` header is allowed but still needs the token. Only one
+  connection is active at a time;
+- its own Chrome process (on Windows, the whole process tree is owned by a job
+  object and terminated with the session).
+
+Several `Browser` instances can run in parallel in one or more processes
+without sharing a port file or extension state. Native input is serialized
+within a process, so their clicks and keystrokes never interleave. `close()`
+removes the session directory and a temporary profile; a `user_data_dir` you
+passed is kept.

@@ -1,0 +1,51 @@
+---
+title: "Browser automation at the OS level"
+searchable: false
+description: "Emunium uses OS-level mouse and keyboard input with your installed Chrome or prepared Camoufox profile. Python guides, examples, and complete API reference."
+---
+
+import { HomeHero, DemoShell, CodePane, HomeSections } from '../components/home'
+import { BrowserDemo } from '../components/browser-demo'
+
+<HomeHero />
+
+<DemoShell>
+<CodePane>
+<div className="engine-code engine-code-chromium">
+
+```python
+from emunium import Browser, expect
+
+# Launches installed Chrome via private pipe (no TCP debugging port)
+with Browser(browser="chrome", motion="natural") as browser:
+    browser.goto("https://app.example.com/login")
+
+    browser.get_by_label("Email").type("me@example.com")
+    browser.get_by_placeholder("Password").type("secret")
+    browser.get_by_role("button", name="Sign in").click()
+
+    expect(browser).to_have_url("*/dashboard")
+```
+
+</div>
+<div className="engine-code engine-code-gecko">
+
+```python
+from emunium import Browser, expect
+
+# Connects via signed policy extension (zero WebDriver flags)
+with Browser.connect(
+    browser=r"C:\Camoufox\camoufox.exe",
+    user_data_dir=r"C:\Camoufox\profiles\work",
+) as browser:
+    browser.goto("https://bot.sannysoft.com/")
+
+    expect(browser).to_have_url("https://bot.sannysoft.com/")
+```
+
+</div>
+</CodePane>
+<BrowserDemo />
+</DemoShell>
+
+<HomeSections />

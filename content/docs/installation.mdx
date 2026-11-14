@@ -1,0 +1,44 @@
+---
+title: "Installation"
+description: "Install Emunium, platform requirements, and optional extras."
+---
+
+# Installation
+
+```bash
+pip install emunium
+```
+
+Requires Python 3.10 or newer. Runtime dependencies per platform:
+
+| Platform | Installed with `pip install emunium` | Native input through |
+|---|---|---|
+| Windows | `websockets` | built-in backend: Win32 `SendInput` / `SetCursorPos` via `ctypes` |
+| macOS | `websockets`, `pyautogui`, `pyperclip` | `pyautogui` |
+| Linux | `websockets`, `pyperclip` | built-in backend: X11 XTest via `ctypes` (X11, or XWayland) |
+
+On Linux, native input needs an X server or XWayland (`DISPLAY` set) and the
+system libraries `libX11.so.6` and `libXtst.so.6` (Debian/Ubuntu packages
+`libx11-6` and `libxtst6`); no Python package is involved.
+
+`pyperclip` is used on macOS to paste characters that cannot be sent as key
+presses (see [Keyboard](/docs/mouse-and-keyboard/#keyboard)); on Linux it is only reached for control
+characters. Windows and Linux do not install pyautogui and never import it.
+
+Optional extras:
+
+| Extra | Installs | Unlocks |
+|---|---|---|
+| `standalone` | `opencv-python-headless`, `numpy`, `mss` | `Emunium.find_elements()` image matching |
+| `ocr` | `opencv-python-headless`, `numpy`, `mss`, `easyocr` | `Emunium.find_text_elements()` OCR |
+| `parsing` | `selectolax` | `PageParser` / `Locator` queries |
+| `keyboard` | `keyboard` | non-ASCII keystrokes on macOS when running as root |
+| `hub` | `cryptography` | extension builds for [`Browser.connect`](/docs/connect/) |
+
+```bash
+pip install "emunium[standalone,parsing]"
+```
+
+emunium launches an installed Chrome, Edge, Brave or Chromium; when none is
+installed, Chrome for Testing is downloaded on first launch (see
+[Browsers](/docs/browsers/)).

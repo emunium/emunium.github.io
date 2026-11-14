@@ -1,0 +1,54 @@
+---
+title: "Element API"
+description: "Element handles, properties, actions, focus, and stale elements."
+---
+
+# Element API
+
+`Element` handles are returned by query and wait methods.
+
+```python
+browser.query_selector(selector)  # -> Element | None
+browser.query_selector_all(selector)  # -> list[Element]
+browser.get_by_text(text, exact=False)  # -> list[Element] (deepest matches only)
+browser.get_all_interactive()  # -> list[Element]
+```
+
+Properties: `element_id`, `tag`, `text`, `attrs`, `rect` (CSS px, viewport
+relative), `center` (CSS px), `screen_x`, `screen_y` (screen input coordinates),
+`visible`, `tab_id`, `zoom`.
+
+```python
+element.click(human=True, offset_x=None, offset_y=None)
+element.double_click(human=True)
+element.right_click(human=True)
+element.middle_click(human=True)
+element.hover(offset_x=None, offset_y=None, human=True)
+element.move_to(offset_x=None, offset_y=None, human=True)  # same as hover
+element.type(
+    text,
+    characters_per_minute=None,
+    offset=None,
+    human=True,
+    click_type=ClickType.LEFT,
+    settle=True,
+)
+element.drag_to(target_element, human=True)
+element.scroll_into_view()
+element.focus()
+element.get_attribute(name)
+element.get_computed_style(prop)
+element.inner_text()  # full rendered text; element.text is a 500-char preview
+element.refresh(requery=True)
+```
+
+- Offsets are CSS pixels from the element's top-left corner. Without them a
+  random point in the central part of the element is used.
+- An element handle belongs to the document and tab it was found in. Actions
+  always address that tab, so a handle from another tab still acts on its own
+  tab (which is activated first). A handle whose node was removed, or whose page
+  navigated away, raises `StaleElementError`.
+- `refresh()` re-reads the element; when it is stale, it is found again with
+  the query that produced it (same selector and index). With `requery=False`, or
+  when the query no longer finds an element of the same tag, `StaleElementError`
+  is raised.

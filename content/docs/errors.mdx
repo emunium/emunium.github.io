@@ -1,0 +1,69 @@
+---
+title: "Errors"
+description: "Typed exceptions, timeout messages, and recovery hints."
+---
+
+# Errors
+
+Every emunium exception derives from `EmuniumError` and carries `.message`,
+`.code` (the bridge error code, or `None`), `.method` (the bridge command, or
+`None`) and `.hint` (a suggested next step, or `None`). `str(exc)` is the
+message, followed by a `hint: ...` line when there is a hint; the hint survives
+pickling. All classes are importable from `emunium` and `emunium.errors`.
+
+```text
+EmuniumError
+  BridgeError                       the bridge transport itself failed
+    BridgeDisconnectedError         also ConnectionError: the extension disconnected
+    BridgeTimeoutError              also TimeoutError: no reply arrived in time
+    BridgeProtocolError             malformed frame or unknown command
+  CommandError                      a command reached the extension and failed
+    StaleElementError               the element handle no longer refers to a node
+    TargetClosedError               the tab is gone
+    ContentUnavailableError         the page cannot be scripted (e.g. chrome:// pages)
+    InvalidArgumentError            also ValueError
+    CommandTimeoutError             also TimeoutError
+      WaitTimeoutError
+    NavigationError                 also RuntimeError
+      NavigationTimeoutError        also TimeoutError
+    ScriptError                     also RuntimeError
+      CSPBlockedError
+  NativeInputError                  also RuntimeError: OS input unavailable or refused
+    ClickVerificationError          the cursor could not be verified over the element
+  LaunchError                       also RuntimeError: Chrome or the extension did not start
+  ElementNotFoundError              also LookupError: a selector resolved to no element to act on
+  ExpectationError                  also AssertionError: an expectation did not hold in time
+```
+
+Because the timeout classes also derive from `TimeoutError` and the others from
+the matching built-in, `except TimeoutError:`, `except LookupError:` and similar
+handlers keep working.
+
+The element waits (`wait`, `wait_for_element`, `wait_for_xpath`,
+`wait_for_text`, and every action that takes a selector) raise
+`WaitTimeoutError` chained from the extension's error. The message names the
+page, and the hint comes from one count of the selector's matches taken after
+the timeout (left out when that count fails):
+
+```text
+Element not found after 10.0s: '#save' (url=https://example.com/form, title='Form')
+hint: 2 element(s) match but none satisfied conditions clickable
+```
+
+`no element matches '#save' on this page` means the selector itself is wrong or
+the content has not loaded. A headless browser refusing native input, a click
+that could not be verified and a window that delivers no pointer events also
+carry hints.
+
+```python
+from emunium import NativeInputError, StaleElementError
+
+try:
+    button.click()
+except StaleElementError:
+    button.refresh().click()
+except NativeInputError as exc:
+    print("cannot click:", exc.message)
+    if exc.hint:
+        print("try:", exc.hint)
+```

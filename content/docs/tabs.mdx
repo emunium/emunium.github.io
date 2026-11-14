@@ -1,0 +1,26 @@
+---
+title: "Tabs"
+description: "Open, switch, pin, and close browser tabs."
+---
+
+# Tabs
+
+Commands without an explicit tab go to the **pinned tab**. The pin follows what
+the user sees: the initial tab after `launch()`, the tab `goto()` navigated, a
+tab opened by `new_tab()`, a tab chosen with `switch_to_tab()`, and the active
+tab after the pinned tab is closed.
+
+```python
+info = browser.new_tab("https://example.com")  # opens, activates and pins it
+# Opens in the background; the pin is unchanged.
+bg = browser.new_tab("https://example.org", switch=False)
+browser.tabs()  # -> [TabInfo {"tabId", "url", "title", "active", "windowId"}, ...]
+browser.switch_to_tab(bg["tabId"])  # activates the tab, focuses its window, pins it
+browser.switch_to_tab(bg.tab_id)  # the same, through the record attribute
+browser.tab_info()  # pinned tab: TabInfo {"tabId", "url", "title", "status", "active", "windowId"}
+browser.close_tab()  # closes the pinned tab, then pins the active tab
+browser.close_tab(tab_id)  # closes a specific tab
+```
+
+`switch_to_tab` requires an `int` tab id (`InvalidArgumentError` otherwise). A
+command sent to a tab that no longer exists raises `TargetClosedError`.

@@ -1,0 +1,18 @@
+---
+title: "Headless mode"
+description: "DOM-only automation without a visible browser window."
+---
+
+# Headless mode
+
+`Browser(headless=True)` starts a Chromium browser with `--headless=new`.
+Navigation, queries, waits, tabs, network waits and `execute_script` work.
+For this launch mode, every native-input method (`click`, `click_at`, `type`,
+`type_at`, `move_to`, `hover`, `drag_and_drop`, and the matching `Element`
+methods) raises `NativeInputError`. `human=False` does not change this.
+
+For Firefox, use `Browser.connect("firefox", extra_args=["-headless"])`.
+`connect` does not infer headless mode from startup arguments, so the launch-mode
+native-input refusal does not apply. Use DOM operations only, such as
+navigation, queries and `execute_script`; headless browsers have no window
+for OS input.

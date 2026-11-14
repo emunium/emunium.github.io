@@ -1,0 +1,28 @@
+---
+title: "Limitations"
+description: "Platform constraints, focus requirements, and iframe support."
+---
+
+# Limitations
+
+- **Chromium browsers (version 116 or newer) and Firefox (128 or newer)
+  only.** See [Browsers](/docs/browsers/) for how the Manifest V3 extension is
+  installed into each.
+- **Top frame only.** Queries, waits and element actions do not reach into
+  iframes.
+- **Native input needs a visible, focused window.** The browser window must be
+  on screen and not covered at the click point; typing requires OS focus. On
+  Windows, emunium brings the browser window to the foreground before native
+  input (without sending any keys or clicks to do so) and raises
+  `NativeInputError` when Windows keeps another window in front. On macOS and
+  Linux it relies on the extension focusing the window. Real input moves the
+  real cursor: do not use the mouse or keyboard while a script runs.
+- **No native input in headless mode** (see [Headless mode](/docs/headless/)).
+- **Linux** native input goes through X11 XTest and requires an X server or
+  XWayland (`DISPLAY` set) plus `libx11-6` and `libxtst6`; a pure Wayland
+  session without XWayland raises `NativeInputError`. Use one emunium process
+  per X display.
+- **macOS** requires the Accessibility (and, for standalone screenshots, Screen
+  Recording) permission for the terminal or Python process.
+- Standalone clicks are not verified, and OCR quality depends on EasyOCR and the
+  screen content.

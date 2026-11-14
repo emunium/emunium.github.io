@@ -1,0 +1,53 @@
+---
+title: "Overview"
+description: "Emunium documentation: native browser input, installation, guides, and the complete API reference."
+---
+
+# Emunium documentation
+
+Emunium reads the page through a browser extension and acts through the operating system. Use Python locators to find elements, then move the desktop cursor, click, and type through native input.
+
+Start an installed Chrome, Edge, Brave, or Chromium, or connect to a prepared Firefox-family profile, including Camoufox. The guides below include the full reference from the original README.
+
+<DocCards items={[
+  { title: 'Quick start', description: 'Install the package and make your first verified click.', href: '/docs/quick-start/', label: 'START HERE' },
+  { title: 'Browser setup', description: 'Installed Chrome, Camoufox, profiles, and extension installation.', href: '/docs/browsers/', label: 'CHOOSE YOUR BROWSER' },
+  { title: 'Locators & assertions', description: 'Find by role, label, or text. Wait for the state you need.', href: '/docs/locators/', label: 'WRITE A WORKFLOW' },
+  { title: 'Human-like input', description: 'Choose natural, careful, or brisk. Tune the models when needed.', href: '/docs/human-like-input/', label: 'CONFIGURE INPUT' }
+]} />
+
+## How it works
+
+The extension finds elements and reads page state. Native input handles the mouse and keyboard. Before a click, Emunium checks that the page sees the pointer over the intended element. Typing checks keyboard focus.
+
+| Task | How Emunium handles it |
+| --- | --- |
+| Find an element | Extension-based CSS, XPath, text, role, label, or test-ID lookup |
+| Click or type | OS input: Win32 on Windows, X11 XTest on Linux, pyautogui on macOS |
+| Wait for a result | Element conditions, navigation waits, response waits, and assertions |
+| Keep a profile | A persistent profile or `Browser.connect()` |
+| Automate the desktop | Image matching and optional OCR in standalone mode |
+
+<Notice title="Input and browser setup are different paths">
+Page actions do not use CDP or WebDriver. Chrome launch does use a private debugging pipe to install the extension, and Emunium maintains a local bridge. The original README's opening "No CDP" line must be read with its detailed browser-setup section, not as a claim that no CDP is used anywhere. See [Browsers](/docs/browsers/) and [Connect to your own browser](/docs/connect/).
+</Notice>
+
+## Before you run
+
+Native input moves the real cursor and uses the desktop keyboard. Keep the browser visible and focused, and do not use the mouse or keyboard while the script runs. Headless sessions support DOM operations, not native input. Iframes are not supported.
+
+Read [Limitations](/docs/limitations/) for platform requirements and [Running in parallel](/docs/parallel/) before adding workers.
+
+## Find the reference
+
+[Navigation](/docs/navigation/), [waiting](/docs/waiting/), [element handles](/docs/elements/), [locators](/docs/locators/), [mouse and keyboard](/docs/mouse-and-keyboard/), [tabs](/docs/tabs/), [network waits](/docs/network-waits/), [JavaScript](/docs/javascript/), and [errors](/docs/errors/) each have their own page.
+
+For non-browser work, see [Standalone mode](/docs/standalone/), [PageParser and Locator](/docs/parsing/), and [Advanced utilities](/docs/utilities/).
+
+## Source documentation
+
+All 25 substantive sections of the supplied README are included as separate pages. Examples, option tables, formulas, and caveats are retained. Headings and internal links were adapted for the site; motion-model details are collapsible.
+
+The [original README](https://emunium.github.io/source/README.md) and [original CHANGELOG](https://emunium.github.io/source/CHANGELOG.md) are available unabridged. This overview and the home page are navigation summaries. Release behavior is documented in the [Changelog](/changelog/).
+
+Emunium does not claim that native input is indistinguishable from a person's input or that it guarantees avoidance of bot detection.

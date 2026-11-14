@@ -1,0 +1,87 @@
+---
+title: "Mouse and keyboard"
+description: "Verified clicks, dragging, keyboard input, and the fail-safe."
+---
+
+# Mouse and keyboard
+
+## Mouse
+
+```python
+browser.click(selector, human=True, click_type=ClickType.LEFT, timeout=10.0)
+browser.click_at(target, click_type=ClickType.LEFT, human=True, timeout=10.0)
+browser.move_to(target, offset_x=None, offset_y=None, human=True, timeout=10.0)
+browser.hover(target, ...)  # same as move_to
+browser.drag_and_drop(source, target, human=True, timeout=10.0)
+browser.get_center(target)  # -> Point {"x": int, "y": int}; also .x, .y
+```
+
+`target` is a CSS selector or an `Element`. A selector is resolved with
+`wait_for_element(selector, timeout)`. Each method returns the element it acted
+on (`drag_and_drop` returns `None`).
+
+`ClickType` values: `LEFT` (default), `RIGHT`, `MIDDLE`, `DOUBLE`. A double click
+is one cursor movement followed by two presses at the OS double-click interval.
+
+`human=True` moves the cursor along a path planned by the browser's motion
+planner (see [Human-like input](/docs/human-like-input/)); `human=False` puts it on
+the target in one step.
+
+A drag verifies the drop target while the button is held. If verification
+fails after the button went down, the cursor returns to the source, Escape is
+sent to cancel the drag, and only then is the button released.
+
+## Keyboard
+
+```python
+browser.type(
+    selector, text, characters_per_minute=None, offset=None, human=True, timeout=10.0
+)
+browser.type_at(target, text, ..., click_type=ClickType.LEFT)
+```
+
+Typing clicks the element (with the same verification as a click), then checks
+that the element holds keyboard focus and that the browser window has OS focus.
+If it does not after one `focus()` retry, `NativeInputError` is raised and no
+keys are sent. Focus is checked again between chunks of text, so typing stops
+as soon as focus moves elsewhere.
+
+`Element.type(..., settle=True)` (the default) then waits until the page shows
+the typed text, returning after at most 2 seconds with a logged warning;
+`settle=False` returns as soon as the keys are sent. `Browser.type` and
+`Browser.type_at` take no `settle` parameter and always wait this way.
+
+How characters are delivered:
+
+- **Windows**: every character is sent with `SendInput` as a Unicode keystroke
+  (`KEYEVENTF_UNICODE`). The active keyboard layout does not matter: Cyrillic,
+  CJK, accented letters and emoji are typed as keystrokes, never pasted. `\n`
+  is sent as Enter and `\t` as Tab.
+- **Linux**: every character is typed as a keystroke through X11 XTest,
+  whatever the keyboard layout. A character the layout lacks (Cyrillic on a US
+  layout, CJK, emoji) is typed on a spare keycode that emunium maps to it for a
+  moment and restores afterwards; nothing is pasted. Run one emunium process
+  per X display (one worker per display or Xvfb): two processes typing such
+  characters on the same display can interfere.
+- **macOS**: printable ASCII, `\n` and `\t` are typed as key presses.
+  Other characters are typed with the `keyboard` package when it is installed
+  and the process runs as root; otherwise they are pasted through the clipboard
+  (`Cmd+V`). The previous clipboard text is restored afterwards if the
+  clipboard still holds the pasted text.
+
+`human=True` waits between keystrokes as the browser's typing rhythm draws it
+(see [Typing rhythm](/docs/human-like-input/#typing-rhythm)). `characters_per_minute` (60 to 900)
+overrides the rhythm's median speed and `offset` (milliseconds, 0 to 1000 and
+below the median interval `60000 / characters_per_minute`) its random jitter;
+`None` keeps the rhythm's own values. With `human=True`, a value outside these
+ranges raises `InvalidArgumentError` before any key is sent.
+`characters_per_minute` of 0 or less, like
+`human=False`, types without delay between keystrokes.
+
+## Fail-safe
+
+- **Windows and Linux**: with the cursor in a corner of the primary screen (on
+  Linux, of the X screen), the next native action is refused with
+  `NativeInputError`. Set `EMUNIUM_FAILSAFE=0` to disable this check.
+- **macOS**: pyautogui's own fail-safe applies and raises
+  `pyautogui.FailSafeException`. `EMUNIUM_FAILSAFE` has no effect there.

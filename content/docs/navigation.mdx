@@ -1,0 +1,52 @@
+---
+title: "Navigation"
+description: "Navigate pages and choose the load state to wait for."
+---
+
+# Navigation
+
+```python
+result = browser.goto("https://example.com", timeout=30.0, wait_until="load")
+# -> PageInfo {"url": ..., "title": ..., "tabId": ..., "contentReady": ...}
+result["tabId"]  # dict access, as before
+result.tab_id  # the same value as a typed attribute
+```
+
+Results of `goto`, `page_info`, `tab_info`, `tabs`, `wait_for_response`,
+`expect_response(...).value` and `get_center` are **result records**
+(`PageInfo`, `TabInfo`, `NetworkResponse`, `Point` from `emunium`); the
+replies of `new_tab`, `switch_to_tab` and `close_tab` are plain `Record`s.
+They are `dict` subclasses holding exactly the extension's reply: `x["key"]`,
+`==` with a dict, `json.dumps(x)`, `print(x)` and `repr(x)` behave as for the
+plain dict. Each key can also be read as a snake_case attribute
+(`info.ready_state` is `info["readyState"]`); a missing key raises
+`AttributeError` naming the key. `type(x) is dict` is `False`, pickles need
+emunium importable to load, and serializers that accept only exact dicts (for
+example `yaml.safe_dump`) need `dict(x)`.
+
+`wait_until` is one of:
+
+| Value | `goto` returns when |
+|---|---|
+| `"commit"` | the navigation is committed |
+| `"domcontentloaded"` | the DOM is parsed |
+| `"load"` (default) | the page `load` event fired |
+
+A navigation that does not finish in time raises `NavigationTimeoutError`; one
+that fails (DNS error, aborted, blocked) raises `NavigationError`. The tab that
+was navigated becomes the pinned tab (see [Tabs](/docs/tabs/)).
+
+```python
+browser.wait_for_idle(silence=2.0, timeout=30.0)  # -> bool
+```
+
+`wait_for_idle` returns `True` once `document.readyState` is `"complete"` both
+before and after `silence` seconds, `False` when `timeout` runs out. Only the
+transient error of a document swap is retried; any other error propagates.
+
+```python
+browser.page_info()  # PageInfo: url, title, readyState, scrollX, scrollY, scrollWidth, scrollHeight, geometry
+browser.page_info().ready_state  # also .url, .title, .scroll_x, .scroll_y, .scroll_width, .scroll_height
+browser.scroll_to(element_or_selector)  # scroll the element into view
+browser.scroll_to(x, y)  # scroll the page to absolute CSS pixel coords
+```

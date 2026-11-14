@@ -1,0 +1,20 @@
+---
+title: "Running the Linux suite"
+description: "Run the unit and end-to-end suites inside Docker."
+---
+
+# Running the Linux suite
+
+```bash
+python tests/docker/run_linux.py
+```
+
+Needs Docker. The script builds the `emunium-linux-tests:local` image
+(`tests/docker/Dockerfile`: Python 3.10, Debian's Chromium, Xvfb and openbox)
+from a temporary context holding only the package, the tests and the project
+metadata, then runs the unit suite and the e2e suite (real X11 input against
+Chromium) under Xvfb in one container. It prints the tail of the log and exits
+with the container's status, non-zero when either suite failed. Options:
+`--tail N` (log lines to print, default 60), `--log PATH` (full log, default
+`emunium-linux-tests.log` in the temp directory), `--timeout S` (container run
+limit, default 1800).

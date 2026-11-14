@@ -1,0 +1,30 @@
+---
+title: "PageParser and Locator"
+description: "Parse HTML and use locators without a live browser."
+---
+
+# PageParser and Locator
+
+Offline HTML parsing with CSS selectors. No browser needed. Requires
+`emunium[parsing]`.
+
+```python
+from emunium import PageParser
+
+html = browser.execute_script("return document.documentElement.outerHTML")
+parser = PageParser(html)
+
+links = parser.locator("a[href]").all()
+btn = parser.get_by_text("Sign in", exact=True).first
+inputs = parser.get_by_role("textbox").all()
+field = parser.get_by_placeholder("Search").first
+email = parser.get_by_label("Email address").first
+submit = parser.get_by_test_id("submit-btn").first
+```
+
+`Locator` supports `.first`, `.last`, `.nth(i)`, `.all()`, `.count()`,
+`.inner_text()`, `.get_attribute(name)` and `.filter(has_text=...)`.
+
+Without selectolax every query method raises `ImportError` (an empty result
+would be indistinguishable from "no match"); only `parser.title` falls back to
+a regular expression.

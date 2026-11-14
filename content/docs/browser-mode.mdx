@@ -1,0 +1,72 @@
+---
+title: "Browser mode"
+description: "Browser lifecycle, constructor options, and persistent profiles."
+---
+
+# Browser mode
+
+```python
+from emunium import Browser, Wait, WaitStrategy
+
+with Browser(user_data_dir="my_profile") as browser:
+    browser.goto("https://duckduckgo.com/")
+
+    browser.type('input[name="q"]', "emunium automation")
+    browser.click('button[type="submit"]')
+
+    browser.wait(
+        "a[data-testid='result-title-a']",
+        strategy=WaitStrategy.STABLE,
+        condition=Wait().visible().text_not_empty().stable(duration_ms=500),
+        timeout=30,
+    )
+
+    print(browser.title, browser.url)
+
+    for link in browser.query_selector_all("a[data-testid='result-title-a']")[:5]:
+        print(link.text.strip()[:60])
+```
+
+`Browser` constructor:
+
+```python
+Browser(
+    headless=False,
+    user_data_dir=None,    # persistent profile dir; a temporary profile if None
+    bridge_port=0,         # 0 = OS-assigned port on 127.0.0.1
+    bridge_timeout=60.0,   # seconds to wait for the extension to connect
+    *,
+    browser=None,          # "chrome", "edge", "brave", "chromium", "cft", "auto" or a path; Firefox uses Browser.connect
+    chrome_path=None,      # browser binary, used when browser is None
+    extra_args=None,       # list[str] of extra browser command-line flags
+    verify_input=True,     # verify the cursor position before every click
+    motion=None,           # pointer planner: "natural" (None), "careful", "brisk" or a MotionPlanner
+    typing=None,           # typing rhythm: "natural" (None), "careful", "brisk" or a TypingRhythm
+)
+```
+
+- `browser` and `chrome_path` select the browser; see [Browsers](/docs/browsers/). A
+  path that does not exist raises `LaunchError`.
+- `extra_args` must be a list of strings; a single string raises `LaunchError`
+  instead of being split.
+- `verify_input=False` skips the pointer check described in
+  [Screen coordinates](/docs/coordinates/) and clicks at the
+  computed position.
+- `motion` and `typing` choose how `human=True` actions move the cursor and pace
+  keystrokes; see [Human-like input](/docs/human-like-input/). An unknown preset name
+  or a wrong type raises `InvalidArgumentError`.
+
+`launch()` is transactional: if Chrome or the extension fails to start, every
+process and temporary directory it created is removed before the error is
+raised (`LaunchError`, or the emunium exception that caused the failure). `close()` is safe to call more than once. The
+context manager calls both.
+
+On Windows, `launch()` then tries once to bring the browser window to the
+foreground (a browser started from a background process can open behind other
+windows); a failure there is only logged. Every native action raises the
+window again before sending input. On a headed Windows browser, `close()` first
+closes the tabs through the extension (up to one second), so Chrome exits on its
+own before the process tree is terminated.
+
+Properties: `browser.url`, `browser.title`, `browser.bridge`,
+`browser.browser_name`.

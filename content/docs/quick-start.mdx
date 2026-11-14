@@ -1,0 +1,52 @@
+---
+title: "Quick start"
+description: "Open a browser, find elements, and make a verified click."
+---
+
+# Quick start
+
+```python
+from emunium import Browser, expect
+
+with Browser() as browser:
+    info = browser.goto("https://example.com/")
+    print(info.url, info.tab_id)  # a result record: the reply dict, plus attributes
+
+    expect(browser).to_have_title("Example Domain")  # retries until it holds
+    # A live locator: queried again on every call.
+    link = browser.get_by_role("link").first
+    print(link.text())
+
+    with browser.expect_navigation("*iana.org*") as nav:
+        link.click()  # a real, verified mouse click
+    print(nav.value.title, nav.value.ready_state)
+```
+
+A typical application flow: locators find elements by role, label,
+placeholder or test id; actions wait for the element first; `expect` retries
+until the assertion holds; URL and network waits return records.
+
+```python
+from emunium import Browser, expect
+
+with Browser() as browser:
+    browser.goto("https://app.example/login")
+    browser.get_by_label("Email").type("me@example.com")
+    browser.get_by_placeholder("Password").type("secret")
+
+    with browser.expect_response("*/api/session") as login:
+        browser.get_by_role("button", name="Sign in").click()
+    print(login.value.status, login.value.ok)  # NetworkResponse
+
+    browser.wait_for_url("*/dashboard")  # a glob, a re.Pattern or a callable
+    expect(browser.get_by_test_id("unread")).to_contain_text("new")
+    expect(browser.locator("#spinner")).to_be_hidden()
+
+    for tab in browser.tabs():  # TabInfo records
+        print(tab.tab_id, tab.title, tab.active)
+```
+
+`print(browser)` shows `Browser(headless=False, launched=True, port=51234)`
+without talking to the page. The selector-based API below (`browser.click`,
+`browser.wait` with `Wait`, `query_selector`, ...) works as before; see
+[Locators](/docs/locators/) for the full locator and assertion reference.

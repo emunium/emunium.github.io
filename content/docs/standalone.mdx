@@ -1,0 +1,54 @@
+---
+title: "Standalone mode"
+description: "Desktop automation with image matching and OCR."
+---
+
+# Standalone mode
+
+Desktop automation without a browser, via screenshots (`mss`) and template
+matching (OpenCV). Requires `emunium[standalone]`; OCR requires `emunium[ocr]`.
+
+```python
+from emunium import ClickType, Emunium
+
+emu = Emunium()
+matches = emu.find_elements("search_icon.png", min_confidence=0.8)
+if matches:
+    emu.click_at(matches[0], ClickType.LEFT)
+
+fields = emu.find_elements("text_field.png", min_confidence=0.85)
+if fields:
+    emu.type_at(fields[0], "hello world")
+```
+
+With OCR (EasyOCR is initialized in the constructor, so a missing model or
+package fails here rather than at the first search):
+
+```python
+emu = Emunium(ocr_enabled=True, use_gpu=True, langs=["en"])  # ocr=True is an alias
+hits = emu.find_text_elements("Sign in", min_confidence=0.8)
+if hits:
+    emu.click_at(hits[0])
+```
+
+- `find_elements(image_path, min_confidence=0.8, target_height=None,
+  target_width=None, max_elements=0, region=None)` returns `&#123;"x", "y"&#125;` match
+  centers in screen input coordinates, best score first, with overlapping
+  duplicates removed. Templates are searched at several scales (0.9, 1.0,
+  1.1), rotations (-10, 0, +10 degrees) and contrasts. `region` is
+  `(left, top, width, height)` in screen input coordinates and may be negative
+  on multi-monitor desktops. `max_elements=0` means no limit.
+- `find_text_elements(query, min_confidence=0.8, max_elements=0, region=None)`
+  raises `RuntimeError` when OCR was not enabled.
+- `wait_for_image(...)` and `wait_for_text_ocr(...)` poll until a match appears;
+  they raise `TimeoutError`, or return `None` with `raise_on_timeout=False`.
+- `move_to(center)`, `click_at(center, click_type)`, `type_at(center, text)`,
+  `type_text(text)`, `drag_and_drop(start, end)` and `scroll_to(center)` (mouse
+  wheel notches until the point is near the vertical middle of the screen)
+  use the same native input as browser mode, including layout-independent
+  typing on Windows. Standalone clicks are not verified: there is no page to
+  confirm them.
+- `Emunium(motion=..., typing=...)` selects the pointer planner and typing
+  rhythm exactly like `Browser` (see [Human-like input](/docs/human-like-input/)).
+  `type_at` and `type_text` take the same `characters_per_minute` and `offset`
+  overrides as `Browser.type`.

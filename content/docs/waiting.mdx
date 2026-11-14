@@ -1,0 +1,168 @@
+---
+title: "Waiting"
+description: "Element conditions, URL waits, navigation, and timeout behavior."
+---
+
+# Waiting
+
+## Simple waits
+
+```python
+browser.wait_for_element(selector, timeout=10.0)  # CSS
+browser.wait_for_xpath(xpath, timeout=10.0, *, strategy=None, condition=None)
+browser.wait_for_text(text, timeout=10.0, *, strategy=None, condition=None)
+```
+
+Each returns an `Element` and raises `WaitTimeoutError` (a `TimeoutError`)
+when nothing matched in time; see [Errors](/docs/errors/) for its message and hint.
+`strategy` and `condition` on the XPath and text waits mean what they mean in
+`browser.wait` below.
+
+## Waits with conditions
+
+```python
+browser.wait(
+    selector,
+    strategy=None,  # WaitStrategy or None
+    condition=None,  # Wait builder (or its payload list)
+    timeout=10.0,
+    raise_on_timeout=True,  # False: return None instead of raising TimeoutError
+)
+```
+
+`Wait()` is a fluent builder. Chained conditions are ANDed:
+
+```python
+browser.wait("#results", condition=Wait().visible().text_not_empty().stable(500))
+```
+
+| Method | Satisfied when |
+|---|---|
+| `.visible()` | rendered (not `display: none`, not `visibility: hidden`/`collapse`, opacity above 0) with a box that is non-zero in at least one dimension |
+| `.clickable()` | visible, enabled, `pointer-events` is not `none` |
+| `.stable(duration_ms=300)` | the bounding rect is unchanged for `duration_ms` |
+| `.unobscured()` | no other element covers its center point |
+| `.hidden()` | the element exists but is not visible |
+| `.detached()` | no element matches (removed or never appeared) |
+| `.text_not_empty()` | inner text is non-empty after trimming |
+| `.text_contains(sub)` | inner text contains `sub` |
+| `.has_attribute(name, value=None)` | the attribute is present (and equals `value` if given) |
+| `.without_attribute(name)` | the attribute is absent |
+| `.has_class(name)` | the CSS class is present |
+| `.has_style(prop, value)` | the computed style property equals `value` |
+| `.count_gt(n)` | more than `n` elements match |
+| `.count_eq(n)` | exactly `n` elements match |
+| `.custom_js(code)` | `code` is a function body run in the page with `el` bound to the element; its return value is truthy |
+| `.any_of(*waits)` | at least one group holds (OR) |
+| `.all_of(*waits)` | every group holds (explicit AND) |
+| `.not_(wait)` | the group does not hold |
+
+`WaitStrategy` values: `PRESENCE`, `VISIBLE`, `CLICKABLE`, `STABLE`, `UNOBSCURED`.
+
+An unknown condition is rejected with `InvalidArgumentError` before waiting.
+A `custom_js` condition is compiled once, before the wait starts, and then
+evaluated on every check:
+
+- A syntax error raises `ScriptError` immediately, without waiting out the
+  timeout.
+- Code that the page's Content Security Policy refuses to compile raises
+  `CSPBlockedError` (emunium first retries through the `userScripts` API, which
+  pages cannot block).
+- An exception thrown while the condition runs counts as `False` ("not yet"):
+  the wait keeps checking and, if the condition never holds, ends with
+  `WaitTimeoutError` (a `TimeoutError`) after the wait's timeout.
+- A condition that returns a promise or other thenable raises `ScriptError`;
+  `custom_js` must return synchronously.
+
+```python
+# Either a success marker or a captcha box
+browser.wait(
+    "body",
+    condition=Wait().any_of(
+        Wait().has_class("success-loaded"),
+        Wait().text_contains("Verify you are human"),
+    ),
+    timeout=15,
+)
+
+# Until the button is no longer disabled
+browser.wait("#submit", condition=Wait().not_(Wait().has_attribute("disabled")))
+```
+
+The operators `|` (any of), `&` (all of) and `~` (not) build the same groups.
+Each returns a new `Wait` and leaves its operands unchanged:
+
+```python
+done = Wait().has_class("success-loaded") | Wait().text_contains("Verify you are human")
+browser.wait("body", condition=done, timeout=15)
+
+enabled = ~Wait().has_attribute("disabled")
+browser.wait("#submit", condition=Wait().visible() & enabled)
+browser.wait_for_text(
+    "Saved", strategy=WaitStrategy.VISIBLE, condition=~Wait().hidden()
+)
+```
+
+The extension checks the conditions on the first element the selector
+matches, in document order.
+
+## Waiting for a URL or a navigation
+
+```python
+import re
+
+browser.wait_for_url("*/dashboard*", timeout=30.0, wait_until="load")  # -> the URL
+browser.wait_for_url(re.compile(r"/orders/\d+$"))  # re.Pattern: search()
+browser.wait_for_url(lambda url: "#done" in url)  # any predicate
+```
+
+`wait_for_url` polls the pinned tab's URL every 100 ms until it matches, then
+waits for the `wait_until` state (`"commit"`, `"domcontentloaded"` or
+`"load"`, as in `goto`) and returns the URL. The glob is the
+`wait_for_response` syntax: only `*` is a wildcard and the whole URL must
+match. URL changes without a new document (`history.pushState`, a new
+`#hash`) count too. Pages without a content script (the PDF viewer, Chrome
+error pages) count as loaded once the tab's status is `"complete"`. When the
+time runs out it raises `NavigationTimeoutError` (a `TimeoutError`) with the
+last URL seen and, if the URL matched, the last load state seen.
+
+```python
+with browser.expect_navigation() as navigation:
+    browser.click("a.next-page")
+print(navigation.value.url, navigation.value.title)  # PageInfo of the new page
+
+with browser.expect_navigation("*/checkout", timeout=15):
+    browser.click("#buy")
+```
+
+`expect_navigation` records the tab and its URL when the block starts. When
+the block ends without an error, it waits until the URL differs from that one
+(and also matches `url` when given) and the `wait_until` state is reached;
+`.value` is then the `PageInfo` of the page (reading it earlier raises
+`RuntimeError`). A navigation back to the same URL, such as a reload, is not
+detected. When the block raises, nothing is awaited.
+
+## Waits without an element
+
+A wait that is satisfied by the absence of an element returns `None`, because
+there is no element to hand back:
+
+```python
+browser.click("#submit-btn")
+browser.wait(".loading-spinner", condition=Wait().detached(), timeout=20)  # -> None
+```
+
+`.hidden()` returns the (still attached) element.
+
+## Soft waits
+
+```python
+promo = browser.wait(
+    ".promo-modal", condition=Wait().visible(), timeout=3.0, raise_on_timeout=False
+)
+if promo:
+    promo.click()
+```
+
+A soft wait that times out and a satisfied element-less wait (such as
+`.detached()`) both return `None`.
